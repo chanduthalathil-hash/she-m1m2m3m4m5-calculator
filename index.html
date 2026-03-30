@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SHE M1-M5 Industrial Tool</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+
+<style>
+body {
+  background: #0a0f1c;
+  color: #e6edf3;
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1100px;
+  margin: auto;
+}
+
+h1 {
+  text-align: center;
+  color: #00e5ff;
+  margin-bottom: 20px;
+}
+
+.card {
+  background: #121a2b;
+  padding: 18px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+  border: 1px solid #1f2a44;
+}
+
+label {
+  font-size: 12px;
+  color: #8aa0c3;
+}
+
+input, select {
+  width: 100%;
+  padding: 8px;
+  margin-top: 4px;
+  margin-bottom: 10px;
+  background: #0b1220;
+  border: 1px solid #2b3553;
+  color: white;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(90deg,#00e5ff,#00ffa6);
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.result {
+  background: #0b1220;
+  padding: 10px;
+  margin-top: 6px;
+  font-family: monospace;
+  border-left: 4px solid #00e5ff;
+  word-break: break-all;
+}
+
+.pass { border-left-color: #00ff9c; }
+.fail { border-left-color: #ff4d4d; }
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.step-title {
+  color: #00e5ff;
+  margin-top: 10px;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>🔐 SHE M1–M5 Validation Tool</h1>
+
+<div class="card">
+
+<div class="grid">
+<div>
+<label>MASTER_ECU_KEY</label>
+<input id="authKey">
+</div>
+
+<div>
+<label>New Key</label>
+<input id="newKey">
+</div>
+
+<div>
+<label>UID</label>
+<input id="uid">
+</div>
+
+<div>
+<label>Counter</label>
+<input id="counter">
+</div>
+
+<div>
+<label>Key ID</label>
+<input id="keyId">
+</div>
+
+<div>
+<label>Auth ID</label>
+<input id="authId">
+</div>
+
+<div>
+<label>FID</label>
+<input id="fid">
+</div>
+</div>
+
+<button onclick="calculate()">🚀 Generate M1–M5</button>
+
+</div>
+
+<div class="card">
+
+<h3>🔑 Derived Keys</h3>
+<div class="result" id="k1out"></div>
+<div class="result" id="k2out"></div>
+
+<h3 class="step-title">📦 Messages</h3>
+
+<div>M1<div class="result" id="m1out"></div></div>
+<div>M2<div class="result" id="m2out"></div></div>
+<div>M3<div class="result" id="m3out"></div></div>
+<div>M4<div class="result" id="m4out"></div></div>
+<div>M5<div class="result" id="m5out"></div></div>
+
+</div>
+
+<div class="card">
+
+<h3>🧪 ECU Validation</h3>
+
+<label>ECU M4</label>
+<input id="ecu_m4">
+
+<label>ECU M5</label>
+<input id="ecu_m5">
+
+<button onclick="validateECU()">Compare with ECU</button>
+
+<div id="validationResult"></div>
+
+</div>
+
+</div>
+
+<script>
+
+// KEEP YOUR EXISTING calculate() FUNCTION HERE EXACTLY
+
+function validateECU(){
+
+let genM4 = document.getElementById("m4out").textContent.trim();
+let genM5 = document.getElementById("m5out").textContent.trim();
+
+let ecuM4 = document.getElementById("ecu_m4").value.trim();
+let ecuM5 = document.getElementById("ecu_m5").value.trim();
+
+let resDiv = document.getElementById("validationResult");
+
+let passM4 = (genM4 === ecuM4);
+let passM5 = (genM5 === ecuM5);
+
+resDiv.innerHTML = `
+<div class="result ${passM4 ? 'pass':'fail'}">
+M4 ${passM4 ? 'MATCH ✅':'MISMATCH ❌'}
+</div>
+
+<div class="result ${passM5 ? 'pass':'fail'}">
+M5 ${passM5 ? 'MATCH ✅':'MISMATCH ❌'}
+</div>
+`;
+
+}
+
+</script>
+
+</body>
+</html>
