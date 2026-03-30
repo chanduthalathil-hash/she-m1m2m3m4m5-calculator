@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SHE M1-M5 Industrial Tool</title>
+<title>SHE M1–M5 Industrial Tool</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
 
 <style>
@@ -15,7 +15,7 @@ body {
 }
 
 .container {
-  max-width: 1100px;
+  max-width: 1200px;
   margin: auto;
 }
 
@@ -27,10 +27,16 @@ h1 {
 
 .card {
   background: #121a2b;
-  padding: 18px;
+  padding: 20px;
   border-radius: 12px;
   margin-bottom: 15px;
   border: 1px solid #1f2a44;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
 
 label {
@@ -41,11 +47,10 @@ label {
 input, select {
   width: 100%;
   padding: 8px;
-  margin-top: 4px;
-  margin-bottom: 10px;
   background: #0b1220;
   border: 1px solid #2b3553;
   color: white;
+  margin-top: 4px;
 }
 
 button {
@@ -55,6 +60,7 @@ button {
   border: none;
   font-weight: bold;
   cursor: pointer;
+  margin-top: 10px;
 }
 
 .result {
@@ -69,15 +75,9 @@ button {
 .pass { border-left-color: #00ff9c; }
 .fail { border-left-color: #ff4d4d; }
 
-.grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
 .step-title {
   color: #00e5ff;
-  margin-top: 10px;
+  margin-top: 15px;
 }
 </style>
 </head>
@@ -92,37 +92,37 @@ button {
 <div class="grid">
 <div>
 <label>MASTER_ECU_KEY</label>
-<input id="authKey">
+<input id="authKey" value="000102030405060708090a0b0c0d0e0f">
 </div>
 
 <div>
 <label>New Key</label>
-<input id="newKey">
+<input id="newKey" value="0f0e0d0c0b0a09080706050403020100">
 </div>
 
 <div>
 <label>UID</label>
-<input id="uid">
+<input id="uid" value="000000000000000000000000000000">
 </div>
 
 <div>
 <label>Counter</label>
-<input id="counter">
+<input id="counter" value="1">
 </div>
 
 <div>
 <label>Key ID</label>
-<input id="keyId">
+<input id="keyId" value="4">
 </div>
 
 <div>
 <label>Auth ID</label>
-<input id="authId">
+<input id="authId" value="1">
 </div>
 
 <div>
 <label>FID</label>
-<input id="fid">
+<input id="fid" value="0">
 </div>
 </div>
 
@@ -156,9 +156,9 @@ button {
 <label>ECU M5</label>
 <input id="ecu_m5">
 
-<button onclick="validateECU()">Compare with ECU</button>
+<button onclick="validateECU()">Compare</button>
 
-<div id="validationResult"></div>
+<div id="validation"></div>
 
 </div>
 
@@ -166,31 +166,155 @@ button {
 
 <script>
 
-// KEEP YOUR EXISTING calculate() FUNCTION HERE EXACTLY
+/* ======= YOUR ORIGINAL CODE (UNCHANGED) ======= */
+
+const KEY_UPDATE_ENC_C = "010153484500800000000000000000B0";
+const KEY_UPDATE_MAC_C = "010253484500800000000000000000B0";
+
+function hexToWA(hex) { return CryptoJS.enc.Hex.parse(hex); }
+function waToHex(wa) { return wa.toString(CryptoJS.enc.Hex); }
+
+function aesEcbEncrypt(keyHex, dataHex) {
+  const key = hexToWA(keyHex);
+  const data = hexToWA(dataHex);
+  const enc = CryptoJS.AES.encrypt(data, key, {
+    mode: CryptoJS.mode.ECB,
+    padding: CryptoJS.pad.NoPadding
+  });
+  return waToHex(enc.ciphertext);
+}
+
+function aesCbcEncrypt(keyHex, ivHex, dataHex) {
+  const key = hexToWA(keyHex);
+  const iv = hexToWA(ivHex);
+  const data = hexToWA(dataHex);
+  const enc = CryptoJS.AES.encrypt(data, key, {
+    mode: CryptoJS.mode.CBC,
+    padding: CryptoJS.pad.NoPadding,
+    iv: iv
+  });
+  return waToHex(enc.ciphertext);
+}
+
+/* ===== AES-CMAC (UNCHANGED) ===== */
+
+function aesCmac(keyHex, dataHex) {
+  const ZERO = "00000000000000000000000000000000";
+  const RB   = "00000000000000000000000000000087";
+
+  function xorHex(a, b) {
+    let r = "";
+    for (let i = 0; i < a.length; i += 2)
+      r += ("0" + (parseInt(a.substr(i,2),16) ^ parseInt(b.substr(i,2),16)).toString(16)).slice(-2);
+    return r;
+  }
+
+  function leftShift(hex) {
+    let bytes = hex.match(/.{2}/g).map(h => parseInt(h,16));
+    let msb = bytes[0] >> 7;
+    let shifted = [];
+    for (let i = 0; i < bytes.length - 1; i++)
+      shifted.push(((bytes[i] << 1) | (bytes[i+1] >> 7)) & 0xFF);
+    shifted.push((bytes[bytes.length-1] << 1) & 0xFF);
+    return { hex: shifted.map(b => ("0"+b.toString(16)).slice(-2)).join(""), msb };
+  }
+
+  const L = aesEcbEncrypt(keyHex, ZERO);
+  const ls1 = leftShift(L);
+  const K1hex = ls1.msb ? xorHex(ls1.hex, RB) : ls1.hex;
+  const ls2 = leftShift(K1hex);
+  const K2hex = ls2.msb ? xorHex(ls2.hex, RB) : ls2.hex;
+
+  const blockLen = 32;
+  let blocks = [];
+  for (let i = 0; i < dataHex.length; i += blockLen)
+    blocks.push(dataHex.substr(i, blockLen));
+
+  if (blocks.length === 0) blocks.push("");
+
+  let last = blocks[blocks.length - 1];
+  if (last.length === blockLen)
+    last = xorHex(last, K1hex);
+  else {
+    let padded = last + "80" + "0".repeat(blockLen - last.length - 2);
+    last = xorHex(padded, K2hex);
+  }
+
+  blocks[blocks.length - 1] = last;
+
+  let X = ZERO;
+  for (let i = 0; i < blocks.length - 1; i++)
+    X = aesEcbEncrypt(keyHex, xorHex(X, blocks[i]));
+
+  return aesEcbEncrypt(keyHex, xorHex(X, blocks[blocks.length-1]));
+}
+
+/* ===== MAIN CALCULATION (UNCHANGED) ===== */
+
+function calculate() {
+  try {
+    const authKey  = document.getElementById("authKey").value;
+    const newKey   = document.getElementById("newKey").value;
+    const uid      = document.getElementById("uid").value;
+    const counter  = parseInt(document.getElementById("counter").value);
+    const keyId    = parseInt(document.getElementById("keyId").value);
+    const authId   = parseInt(document.getElementById("authId").value);
+    const fid      = parseInt(document.getElementById("fid").value);
+
+    const K1 = aesEcbEncrypt(authKey, KEY_UPDATE_ENC_C);
+    const K2 = aesEcbEncrypt(authKey, KEY_UPDATE_MAC_C);
+
+    const idNibble   = (keyId & 0xF).toString(16);
+    const authNibble = (authId & 0xF).toString(16);
+    const M1 = uid + idNibble + authNibble;
+
+    const counterFid = ((counter << 4) | (fid & 0xF)) >>> 0;
+    const counterFidHex = counterFid.toString(16).padStart(8, "0");
+    const M2plain = counterFidHex + "000000000000000000000000" + newKey;
+    const IV_ZERO = "00000000000000000000000000000000";
+    const M2 = aesCbcEncrypt(K1, IV_ZERO, M2plain);
+
+    const M3 = aesCmac(K2, M1 + M2);
+
+    const ctr1 = counter + 1;
+    const ctr1Fid = ((ctr1 << 4) | 0x8) >>> 0;
+    const ctr1Hex = ctr1Fid.toString(16).padStart(8, "0");
+    const M4star = uid + idNibble + authNibble + ctr1Hex + "000000000000000000000000";
+
+    const M4 = aesEcbEncrypt(newKey, M4star.substr(0,32)) +
+               aesEcbEncrypt(newKey, M4star.substr(32,32));
+
+    const M5 = aesCmac(K2, M4);
+
+    document.getElementById("k1out").textContent = K1.toUpperCase();
+    document.getElementById("k2out").textContent = K2.toUpperCase();
+    document.getElementById("m1out").textContent = M1.toUpperCase();
+    document.getElementById("m2out").textContent = M2.toUpperCase();
+    document.getElementById("m3out").textContent = M3.toUpperCase();
+    document.getElementById("m4out").textContent = M4.toUpperCase();
+    document.getElementById("m5out").textContent = M5.toUpperCase();
+
+  } catch(e) {
+    alert(e);
+  }
+}
+
+/* ===== ECU VALIDATION ===== */
 
 function validateECU(){
+  let m4 = document.getElementById("m4out").textContent.trim();
+  let m5 = document.getElementById("m5out").textContent.trim();
 
-let genM4 = document.getElementById("m4out").textContent.trim();
-let genM5 = document.getElementById("m5out").textContent.trim();
+  let ecuM4 = document.getElementById("ecu_m4").value.trim();
+  let ecuM5 = document.getElementById("ecu_m5").value.trim();
 
-let ecuM4 = document.getElementById("ecu_m4").value.trim();
-let ecuM5 = document.getElementById("ecu_m5").value.trim();
-
-let resDiv = document.getElementById("validationResult");
-
-let passM4 = (genM4 === ecuM4);
-let passM5 = (genM5 === ecuM5);
-
-resDiv.innerHTML = `
-<div class="result ${passM4 ? 'pass':'fail'}">
-M4 ${passM4 ? 'MATCH ✅':'MISMATCH ❌'}
-</div>
-
-<div class="result ${passM5 ? 'pass':'fail'}">
-M5 ${passM5 ? 'MATCH ✅':'MISMATCH ❌'}
-</div>
-`;
-
+  document.getElementById("validation").innerHTML = `
+  <div class="result ${m4===ecuM4?'pass':'fail'}">
+  M4 ${m4===ecuM4?'MATCH ✅':'MISMATCH ❌'}
+  </div>
+  <div class="result ${m5===ecuM5?'pass':'fail'}">
+  M5 ${m5===ecuM5?'MATCH ✅':'MISMATCH ❌'}
+  </div>`;
 }
 
 </script>
