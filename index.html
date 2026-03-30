@@ -1,178 +1,201 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>SHE M1–M5 Industrial Tool</title>
+
+<div style="padding: 1rem 0; font-family: var(--font-sans);">
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
 
 <style>
-body {
-  background: #0a0f1c;
-  color: #e6edf3;
-  font-family: 'Segoe UI', sans-serif;
-  margin: 0;
-  padding: 20px;
-}
-
-.container {
-  max-width: 1200px;
-  margin: auto;
-}
-
-h1 {
-  text-align: center;
-  color: #00e5ff;
-  margin-bottom: 20px;
-}
-
-.card {
-  background: #121a2b;
-  padding: 20px;
-  border-radius: 12px;
-  margin-bottom: 15px;
-  border: 1px solid #1f2a44;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-label {
-  font-size: 12px;
-  color: #8aa0c3;
-}
-
-input, select {
-  width: 100%;
-  padding: 8px;
-  background: #0b1220;
-  border: 1px solid #2b3553;
-  color: white;
-  margin-top: 4px;
-}
-
-button {
-  width: 100%;
-  padding: 12px;
-  background: linear-gradient(90deg,#00e5ff,#00ffa6);
-  border: none;
-  font-weight: bold;
-  cursor: pointer;
-  margin-top: 10px;
-}
-
-.result {
-  background: #0b1220;
-  padding: 10px;
-  margin-top: 6px;
-  font-family: monospace;
-  border-left: 4px solid #00e5ff;
-  word-break: break-all;
-}
-
-.pass { border-left-color: #00ff9c; }
-.fail { border-left-color: #ff4d4d; }
-
-.step-title {
-  color: #00e5ff;
-  margin-top: 15px;
-}
+  .she-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1.25rem; margin-bottom: 1rem; }
+  .she-label { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 4px; display: block; }
+  .she-input { width: 100%; box-sizing: border-box; font-family: var(--font-mono); font-size: 13px; padding: 8px 10px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-secondary); color: var(--color-text-primary); }
+  .she-input:focus { outline: none; border-color: var(--color-border-primary); }
+  .she-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .she-row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .she-result { font-family: var(--font-mono); font-size: 12px; background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 10px 12px; word-break: break-all; color: var(--color-text-primary); min-height: 36px; line-height: 1.6; }
+  .she-result.ok { border-left: 3px solid #1D9E75; }
+  .she-result.err { border-left: 3px solid #E24B4A; color: var(--color-text-danger); }
+  .she-section-title { font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin: 0 0 12px; }
+  .she-badge { display: inline-block; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: var(--border-radius-md); margin-right: 6px; }
+  .badge-blue { background: #E6F1FB; color: #0C447C; }
+  .badge-green { background: #EAF3DE; color: #27500A; }
+  .badge-amber { background: #FAEEDA; color: #633806; }
+  .badge-purple { background: #EEEDFE; color: #3C3489; }
+  .badge-coral { background: #FAECE7; color: #712B13; }
+  .she-calc-btn { width: 100%; padding: 10px; font-size: 14px; font-weight: 500; cursor: pointer; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-secondary); color: var(--color-text-primary); margin-top: 4px; }
+  .she-calc-btn:hover { background: var(--color-background-tertiary); }
+  .she-calc-btn:active { transform: scale(0.99); }
+  .divider { border: none; border-top: 0.5px solid var(--color-border-tertiary); margin: 1rem 0; }
+  .step-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .step-num { width: 22px; height: 22px; border-radius: 50%; background: #EEEDFE; color: #3C3489; font-size: 11px; font-weight: 500; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .copy-btn { font-size: 11px; padding: 2px 8px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-tertiary); background: transparent; color: var(--color-text-secondary); cursor: pointer; float: right; }
+  .copy-btn:hover { background: var(--color-background-secondary); }
+  .info-box { background: var(--color-background-info); border: 0.5px solid var(--color-border-info); border-radius: var(--border-radius-md); padding: 10px 12px; font-size: 12px; color: var(--color-text-info); margin-bottom: 12px; line-height: 1.6; }
 </style>
-</head>
 
-<body>
-<div class="container">
+<p style="font-size: 18px; font-weight: 500; color: var(--color-text-primary); margin: 0 0 4px;">SHE Key Update Calculator</p>
+<p style="font-size: 13px; color: var(--color-text-secondary); margin: 0 0 1.25rem;">HIS SHE specification — M1 M2 M3 M4 M5 computation</p>
 
-<h1>🔐 SHE M1–M5 Validation Tool</h1>
+<div class="she-card">
+  <p class="she-section-title">Inputs</p>
 
-<div class="card">
+  <div class="info-box">
+    All values in HEX. UID = 30 hex chars (120 bits). Keys = 32 hex chars (128 bits). Counter = 1-268435455 (28-bit decimal).
+  </div>
 
-<div class="grid">
-<div>
-<label>MASTER_ECU_KEY</label>
-<input id="authKey" value="000102030405060708090a0b0c0d0e0f">
+  <div class="she-row">
+    <div>
+      <span class="she-label">MASTER_ECU_KEY (AuthKey) — 32 hex chars</span>
+      <input class="she-input" id="authKey" placeholder="000102030405060708090a0b0c0d0e0f" value="000102030405060708090a0b0c0d0e0f" maxlength="32" />
+    </div>
+    <div>
+      <span class="she-label">New Key to Load — 32 hex chars</span>
+      <input class="she-input" id="newKey" placeholder="0f0e0d0c0b0a09080706050403020100" value="0f0e0d0c0b0a09080706050403020100" maxlength="32" />
+    </div>
+  </div>
+
+  <div class="she-row">
+    <div>
+      <span class="she-label">ECU UID — 30 hex chars (120 bits)</span>
+      <input class="she-input" id="uid" placeholder="000000000000000000000000000000" value="000000000000000000000000000000" maxlength="30" />
+    </div>
+    <div>
+      <span class="she-label">Counter (decimal, 28-bit max: 268435455)</span>
+      <input class="she-input" id="counter" type="number" min="1" max="268435455" value="1" />
+    </div>
+  </div>
+
+  <div class="she-row3">
+    <div>
+      <span class="she-label">Key Slot ID (target)</span>
+      <select class="she-input" id="keyId">
+        <option value="1">0x01 — MASTER_ECU_KEY</option>
+        <option value="2">0x02 — BOOT_MAC_KEY</option>
+        <option value="3">0x03 — BOOT_MAC</option>
+        <option value="4" selected>0x04 — KEY_1</option>
+        <option value="5">0x05 — KEY_2</option>
+        <option value="6">0x06 — KEY_3</option>
+        <option value="7">0x07 — KEY_4</option>
+        <option value="8">0x08 — KEY_5</option>
+        <option value="9">0x09 — KEY_6</option>
+        <option value="10">0x0A — KEY_7</option>
+        <option value="11">0x0B — KEY_8</option>
+        <option value="12">0x0C — KEY_9</option>
+        <option value="13">0x0D — KEY_10</option>
+        <option value="14">0x0E — RAM_KEY</option>
+      </select>
+    </div>
+    <div>
+      <span class="she-label">Auth Key Slot (AuthID)</span>
+      <select class="she-input" id="authId">
+        <option value="1" selected>0x01 — MASTER_ECU_KEY</option>
+        <option value="2">0x02 — BOOT_MAC_KEY</option>
+        <option value="4">0x04 — KEY_1</option>
+        <option value="5">0x05 — KEY_2</option>
+      </select>
+    </div>
+    <div>
+      <span class="she-label">Flags (FID)</span>
+      <select class="she-input" id="fid">
+        <option value="0" selected>0x0 — None</option>
+        <option value="1">0x1 — WRITE_PROTECT</option>
+        <option value="2">0x2 — BOOT_PROTECT</option>
+        <option value="4">0x4 — DEBUGGER_PROT</option>
+        <option value="8">0x8 — KEY_USAGE</option>
+      </select>
+    </div>
+  </div>
+
+  <button class="she-calc-btn" onclick="calculate()">Calculate M1 M2 M3 M4 M5</button>
 </div>
 
-<div>
-<label>New Key</label>
-<input id="newKey" value="0f0e0d0c0b0a09080706050403020100">
+<div class="she-card" id="resultsCard" style="display:none;">
+  <p class="she-section-title">Derived Keys</p>
+  <div class="she-row">
+    <div>
+      <span class="she-label"><span class="she-badge badge-blue">K1</span> Encryption key (AES-ECB of ENC_C)</span>
+      <div class="she-result ok" id="k1out"></div>
+    </div>
+    <div>
+      <span class="she-label"><span class="she-badge badge-purple">K2</span> MAC key (AES-ECB of MAC_C)</span>
+      <div class="she-result ok" id="k2out"></div>
+    </div>
+  </div>
+
+  <hr class="divider">
+  <p class="she-section-title">Messages</p>
+
+  <div style="margin-bottom: 12px;">
+    <div class="step-header">
+      <div class="step-num">1</div>
+      <span style="font-size: 13px; font-weight: 500; color: var(--color-text-primary);">M1 — ECU identity (UID | ID | AuthID)</span>
+      <span class="she-badge badge-blue">16 bytes</span>
+      <button class="copy-btn" onclick="copyVal('m1out')">copy</button>
+    </div>
+    <div class="she-result ok" id="m1out"></div>
+  </div>
+
+  <div style="margin-bottom: 12px;">
+    <div class="step-header">
+      <div class="step-num">2</div>
+      <span style="font-size: 13px; font-weight: 500; color: var(--color-text-primary);">M2 — Encrypted new key (AES-CBC with K1)</span>
+      <span class="she-badge badge-amber">32 bytes</span>
+      <button class="copy-btn" onclick="copyVal('m2out')">copy</button>
+    </div>
+    <div class="she-result ok" id="m2out"></div>
+  </div>
+
+  <div style="margin-bottom: 12px;">
+    <div class="step-header">
+      <div class="step-num">3</div>
+      <span style="font-size: 13px; font-weight: 500; color: var(--color-text-primary);">M3 — Authentication MAC (CMAC of M1|M2 with K2)</span>
+      <span class="she-badge badge-purple">16 bytes</span>
+      <button class="copy-btn" onclick="copyVal('m3out')">copy</button>
+    </div>
+    <div class="she-result ok" id="m3out"></div>
+  </div>
+
+  <div style="margin-bottom: 12px;">
+    <div class="step-header">
+      <div class="step-num">4</div>
+      <span style="font-size: 13px; font-weight: 500; color: var(--color-text-primary);">M4 — Proof of update (AES-ECB with NewKey)</span>
+      <span class="she-badge badge-green">16 bytes</span>
+      <button class="copy-btn" onclick="copyVal('m4out')">copy</button>
+    </div>
+    <div class="she-result ok" id="m4out"></div>
+  </div>
+
+  <div style="margin-bottom: 4px;">
+    <div class="step-header">
+      <div class="step-num">5</div>
+      <span style="font-size: 13px; font-weight: 500; color: var(--color-text-primary);">M5 — MAC over M4 (CMAC with K2)</span>
+      <span class="she-badge badge-coral">16 bytes</span>
+      <button class="copy-btn" onclick="copyVal('m5out')">copy</button>
+    </div>
+    <div class="she-result ok" id="m5out"></div>
+  </div>
+
+  <hr class="divider">
+  <div style="background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 12px;">
+    <p style="font-size: 12px; font-weight: 500; color: var(--color-text-primary); margin: 0 0 6px;">CMD_LOAD_KEY payload (M1 + M2 + M3)</p>
+    <div class="she-result ok" id="payloadOut" style="font-size: 11px;"></div>
+    <button class="copy-btn" style="float:none; margin-top: 6px;" onclick="copyVal('payloadOut')">copy full payload</button>
+  </div>
 </div>
 
-<div>
-<label>UID</label>
-<input id="uid" value="000000000000000000000000000000">
-</div>
-
-<div>
-<label>Counter</label>
-<input id="counter" value="1">
-</div>
-
-<div>
-<label>Key ID</label>
-<input id="keyId" value="4">
-</div>
-
-<div>
-<label>Auth ID</label>
-<input id="authId" value="1">
-</div>
-
-<div>
-<label>FID</label>
-<input id="fid" value="0">
-</div>
-</div>
-
-<button onclick="calculate()">🚀 Generate M1–M5</button>
-
-</div>
-
-<div class="card">
-
-<h3>🔑 Derived Keys</h3>
-<div class="result" id="k1out"></div>
-<div class="result" id="k2out"></div>
-
-<h3 class="step-title">📦 Messages</h3>
-
-<div>M1<div class="result" id="m1out"></div></div>
-<div>M2<div class="result" id="m2out"></div></div>
-<div>M3<div class="result" id="m3out"></div></div>
-<div>M4<div class="result" id="m4out"></div></div>
-<div>M5<div class="result" id="m5out"></div></div>
-
-</div>
-
-<div class="card">
-
-<h3>🧪 ECU Validation</h3>
-
-<label>ECU M4</label>
-<input id="ecu_m4">
-
-<label>ECU M5</label>
-<input id="ecu_m5">
-
-<button onclick="validateECU()">Compare</button>
-
-<div id="validation"></div>
-
-</div>
-
+<div class="she-card" id="errorCard" style="display:none;">
+  <div class="she-result err" id="errorOut"></div>
 </div>
 
 <script>
-
-/* ======= YOUR ORIGINAL CODE (UNCHANGED) ======= */
-
 const KEY_UPDATE_ENC_C = "010153484500800000000000000000B0";
 const KEY_UPDATE_MAC_C = "010253484500800000000000000000B0";
 
-function hexToWA(hex) { return CryptoJS.enc.Hex.parse(hex); }
-function waToHex(wa) { return wa.toString(CryptoJS.enc.Hex); }
+function hexToWA(hex) {
+  return CryptoJS.enc.Hex.parse(hex);
+}
+
+function waToHex(wa) {
+  return wa.toString(CryptoJS.enc.Hex);
+}
 
 function aesEcbEncrypt(keyHex, dataHex) {
   const key = hexToWA(keyHex);
@@ -196,16 +219,16 @@ function aesCbcEncrypt(keyHex, ivHex, dataHex) {
   return waToHex(enc.ciphertext);
 }
 
-/* ===== AES-CMAC (UNCHANGED) ===== */
-
 function aesCmac(keyHex, dataHex) {
+  // AES-CMAC per RFC 4493
   const ZERO = "00000000000000000000000000000000";
   const RB   = "00000000000000000000000000000087";
 
   function xorHex(a, b) {
     let r = "";
-    for (let i = 0; i < a.length; i += 2)
+    for (let i = 0; i < a.length; i += 2) {
       r += ("0" + (parseInt(a.substr(i,2),16) ^ parseInt(b.substr(i,2),16)).toString(16)).slice(-2);
+    }
     return r;
   }
 
@@ -213,79 +236,116 @@ function aesCmac(keyHex, dataHex) {
     let bytes = hex.match(/.{2}/g).map(h => parseInt(h,16));
     let msb = bytes[0] >> 7;
     let shifted = [];
-    for (let i = 0; i < bytes.length - 1; i++)
+    for (let i = 0; i < bytes.length - 1; i++) {
       shifted.push(((bytes[i] << 1) | (bytes[i+1] >> 7)) & 0xFF);
+    }
     shifted.push((bytes[bytes.length-1] << 1) & 0xFF);
     return { hex: shifted.map(b => ("0"+b.toString(16)).slice(-2)).join(""), msb };
   }
 
+  // generate subkeys
   const L = aesEcbEncrypt(keyHex, ZERO);
   const ls1 = leftShift(L);
   const K1hex = ls1.msb ? xorHex(ls1.hex, RB) : ls1.hex;
   const ls2 = leftShift(K1hex);
   const K2hex = ls2.msb ? xorHex(ls2.hex, RB) : ls2.hex;
 
-  const blockLen = 32;
+  // split data into 16-byte blocks
+  const data = dataHex;
+  const blockLen = 32; // 16 bytes = 32 hex chars
   let blocks = [];
-  for (let i = 0; i < dataHex.length; i += blockLen)
-    blocks.push(dataHex.substr(i, blockLen));
-
-  if (blocks.length === 0) blocks.push("");
-
-  let last = blocks[blocks.length - 1];
-  if (last.length === blockLen)
-    last = xorHex(last, K1hex);
-  else {
-    let padded = last + "80" + "0".repeat(blockLen - last.length - 2);
-    last = xorHex(padded, K2hex);
+  for (let i = 0; i < data.length; i += blockLen) {
+    blocks.push(data.substr(i, blockLen));
+  }
+  if (blocks.length === 0) {
+    blocks.push("");
   }
 
-  blocks[blocks.length - 1] = last;
+  // process last block
+  let lastBlock = blocks[blocks.length - 1];
+  let flag;
+  if (lastBlock.length === blockLen) {
+    lastBlock = xorHex(lastBlock, K1hex);
+    flag = true;
+  } else {
+    // pad
+    let padded = lastBlock + "80" + "0".repeat(blockLen - lastBlock.length - 2);
+    lastBlock = xorHex(padded, K2hex);
+    flag = false;
+  }
+  blocks[blocks.length - 1] = lastBlock;
 
+  // CBC with zero IV
   let X = ZERO;
-  for (let i = 0; i < blocks.length - 1; i++)
+  for (let i = 0; i < blocks.length - 1; i++) {
     X = aesEcbEncrypt(keyHex, xorHex(X, blocks[i]));
-
-  return aesEcbEncrypt(keyHex, xorHex(X, blocks[blocks.length-1]));
+  }
+  const T = aesEcbEncrypt(keyHex, xorHex(X, blocks[blocks.length-1]));
+  return T;
 }
 
-/* ===== MAIN CALCULATION (UNCHANGED) ===== */
+function validate(hex, len, name) {
+  hex = hex.replace(/\s/g,"").toLowerCase();
+  if (!/^[0-9a-f]+$/.test(hex)) throw name + ": invalid hex characters";
+  if (hex.length !== len) throw name + ": must be " + len + " hex chars (" + (len/2) + " bytes)";
+  return hex;
+}
 
 function calculate() {
+  document.getElementById("resultsCard").style.display = "none";
+  document.getElementById("errorCard").style.display = "none";
+
   try {
-    const authKey  = document.getElementById("authKey").value;
-    const newKey   = document.getElementById("newKey").value;
-    const uid      = document.getElementById("uid").value;
+    const authKey  = validate(document.getElementById("authKey").value, 32, "MASTER_ECU_KEY");
+    const newKey   = validate(document.getElementById("newKey").value, 32, "New Key");
+    const uid      = validate(document.getElementById("uid").value, 30, "UID");
     const counter  = parseInt(document.getElementById("counter").value);
     const keyId    = parseInt(document.getElementById("keyId").value);
     const authId   = parseInt(document.getElementById("authId").value);
     const fid      = parseInt(document.getElementById("fid").value);
 
+    if (isNaN(counter) || counter < 1 || counter > 268435455)
+      throw "Counter must be between 1 and 268435455";
+
+    // STEP 1 — Derive K1 and K2
     const K1 = aesEcbEncrypt(authKey, KEY_UPDATE_ENC_C);
     const K2 = aesEcbEncrypt(authKey, KEY_UPDATE_MAC_C);
 
+    // STEP 2 — Build M1
+    // M1 = UID(120) | ID(4) | AuthID(4) = 128 bits = 16 bytes = 32 hex
     const idNibble   = (keyId & 0xF).toString(16);
     const authNibble = (authId & 0xF).toString(16);
     const M1 = uid + idNibble + authNibble;
 
+    // STEP 3 — Build M2
+    // M2_plain = Counter(28) | FID(4) | 0x00*12 | NewKey(128) = 256 bits = 32 bytes
+    // Counter(28) | FID(4) = 32 bits = 4 bytes = 8 hex
     const counterFid = ((counter << 4) | (fid & 0xF)) >>> 0;
     const counterFidHex = counterFid.toString(16).padStart(8, "0");
     const M2plain = counterFidHex + "000000000000000000000000" + newKey;
+    // encrypt with K1, CBC, IV=0
     const IV_ZERO = "00000000000000000000000000000000";
     const M2 = aesCbcEncrypt(K1, IV_ZERO, M2plain);
 
+    // STEP 4 — Build M3
+    // M3 = CMAC(K2, M1 | M2)
     const M3 = aesCmac(K2, M1 + M2);
 
+    // STEP 5 — Build M4 and M5
+    // M4* = UID(120) | ID(4) | AuthID(4) | Counter+1(28) | 1(1) | 0..0(99) = 256 bits
     const ctr1 = counter + 1;
-    const ctr1Fid = ((ctr1 << 4) | 0x8) >>> 0;
+    const ctr1Fid = ((ctr1 << 4) | 0x8) >>> 0; // bit 3 = 1 (proof bit)
     const ctr1Hex = ctr1Fid.toString(16).padStart(8, "0");
     const M4star = uid + idNibble + authNibble + ctr1Hex + "000000000000000000000000";
-
-    const M4 = aesEcbEncrypt(newKey, M4star.substr(0,32)) +
-               aesEcbEncrypt(newKey, M4star.substr(32,32));
-
+    // M4 = AES-ECB-Encrypt(NewKey, M4*)
+    // M4* is 256 bits, encrypt in two ECB blocks
+    const M4a = aesEcbEncrypt(newKey, M4star.substr(0,32));
+    const M4b = aesEcbEncrypt(newKey, M4star.substr(32,32));
+    const M4 = M4a + M4b;
+    // M5 = CMAC(K2, M4)
     const M5 = aesCmac(K2, M4);
 
+    // display
     document.getElementById("k1out").textContent = K1.toUpperCase();
     document.getElementById("k2out").textContent = K2.toUpperCase();
     document.getElementById("m1out").textContent = M1.toUpperCase();
@@ -293,31 +353,25 @@ function calculate() {
     document.getElementById("m3out").textContent = M3.toUpperCase();
     document.getElementById("m4out").textContent = M4.toUpperCase();
     document.getElementById("m5out").textContent = M5.toUpperCase();
+    document.getElementById("payloadOut").textContent = (M1 + M2 + M3).toUpperCase();
+
+    document.getElementById("resultsCard").style.display = "block";
 
   } catch(e) {
-    alert(e);
+    document.getElementById("errorOut").textContent = "Error: " + e;
+    document.getElementById("errorCard").style.display = "block";
   }
 }
 
-/* ===== ECU VALIDATION ===== */
-
-function validateECU(){
-  let m4 = document.getElementById("m4out").textContent.trim();
-  let m5 = document.getElementById("m5out").textContent.trim();
-
-  let ecuM4 = document.getElementById("ecu_m4").value.trim();
-  let ecuM5 = document.getElementById("ecu_m5").value.trim();
-
-  document.getElementById("validation").innerHTML = `
-  <div class="result ${m4===ecuM4?'pass':'fail'}">
-  M4 ${m4===ecuM4?'MATCH ✅':'MISMATCH ❌'}
-  </div>
-  <div class="result ${m5===ecuM5?'pass':'fail'}">
-  M5 ${m5===ecuM5?'MATCH ✅':'MISMATCH ❌'}
-  </div>`;
+function copyVal(id) {
+  const txt = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(txt).then(() => {
+    const btn = document.querySelector('[onclick="copyVal(\'' + id + '\')"]');
+    if (btn) { btn.textContent = "copied!"; setTimeout(() => btn.textContent = "copy", 1500); }
+  });
 }
 
+// auto calculate on load
+window.addEventListener('load', () => setTimeout(calculate, 300));
 </script>
-
-</body>
-</html>
+</div>
